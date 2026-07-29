@@ -1,0 +1,141 @@
+# MeetingAction
+
+Turn a raw meeting transcript (or audio) into a structured record — **summary,
+key points, decisions, owned action items, risks, and a ready-to-send follow-up
+email** — powered by Claude, with optional one-click export of action items to
+**Jira** and **Notion**.
+
+- **Backend:** FastAPI (Python) using the Anthropic SDK with structured outputs.
+- **Frontend:** React + TypeScript (Vite).
+- **Deploy target:** Vercel (React static build + Python serverless function).
+
+---
+
+## How it works
+
+```
+┌──────────────┐   POST /api/analyze    ┌───────────────────────┐   messages.parse   ┌─────────┐
+│  React app   │ ─────────────────────▶ │  FastAPI (serverless) │ ─────────────────▶ │ Claude  │
+│  (web/)      │ ◀───────────────────── │  (server/ via api/)   │ ◀───────────────── │ Opus 4.8│
+└──────────────┘   MeetingAnalysis JSON └───────────────────────┘  structured output └─────────┘
+         │                                        │
+         │  POST /api/export/{jira,notion}        ├─▶ Jira Cloud REST API   (optional)
+         └───────────────────────────────────────┴─▶ Notion API            (optional)
+```
+
+The model is constrained to a strict JSON schema via the Anthropic SDK's
+structured-output parsing (`messages.parse`), so responses are validated — never
+free-form text that has to be scraped.
+
+## Features
+
+| Feature | Requires | Behavior when unconfigured |
+| --- | --- | --- |
+| Transcript → structured analysis | `ANTHROPIC_API_KEY` | `/api/analyze` returns `503 feature_unavailable` |
+| Audio upload → transcript | `OPENAI_API_KEY` (Whisper) | Upload button hidden; endpoint returns `503` |
+| Export action items → Jira | `JIRA_*` env vars | Jira button hidden; endpoint returns `503` |
+| Export action items → Notion | `NOTION_API_KEY` + `NOTION_DATABASE_ID` | Notion button hidden; endpoint returns `503` |
+
+The frontend reads `GET /api/health` on load and enables UI only for configured
+features — so the app is fully usable with just an Anthropic key.
+
+## Project structure
+
+```
+meetingAction/
+├── api/index.py           # Vercel serverless entrypoint (exposes the ASGI `app`)
+├── server/                # FastAPI application package
+│   ├── main.py            # app factory, CORS, error handling, router wiring
+│   ├── config.py          # env-driven settings + feature detection
+│   ├── schemas.py         # LLM output contract + public API models
+│   ├── prompts.py         # system/user prompt construction
+│   ├── errors.py          # typed errors + JSON error envelope
+│   ├── routers/           # health, analyze, transcribe, export
+│   └── services/          # claude, transcription, jira, notion
+├── web/                   # React + Vite + TypeScript frontend
+├── tests/                 # pytest suite (mocks the model — no API key needed)
+├── vercel.json            # build + function + rewrite config
+├── requirements.txt       # backend runtime deps
+└── .github/workflows/ci.yml
+```
+
+## Local development
+
+### 1. Backend
+
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\activate     macOS/Linux: source .venv/bin/activate
+pip install -r requirements-dev.txt
+cp .env.example .env      # add ANTHROPIC_API_KEY (and any optional keys)
+uvicorn api.index:app --reload --port 8000
+```
+
+The API is now at `http://localhost:8000/api/health`.
+
+### 2. Frontend
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+The dev server runs on `http://localhost:5173` and proxies `/api/*` to the
+backend on `:8000` (see `web/vite.config.ts`).
+
+## Testing & linting
+
+```bash
+# Backend — no API key required; the Claude service is mocked
+pytest -q
+ruff check server tests api
+
+# Frontend — type-check + production build
+npm --prefix web run build
+```
+
+CI (`.github/workflows/ci.yml`) runs all of the above on every push and PR.
+
+## Deploying to Vercel
+
+1. Push this repo to GitHub and import it in Vercel (no extra settings needed —
+   `vercel.json` defines the build, the Python function, and the `/api/*` rewrite).
+2. In **Project → Settings → Environment Variables**, add at minimum
+   `ANTHROPIC_API_KEY`, plus any optional integration keys from `.env.example`.
+3. Deploy. Vercel builds `web/` to static assets and runs `api/index.py` as a
+   Python serverless function; both are served from the same origin, so the
+   frontend's relative `/api/...` calls work in production with no CORS setup.
+
+> **Serverless note:** analysis runs as a single request. `maxDuration` is set to
+> 60s in `vercel.json`; keep `ANALYSIS_EFFORT` at `medium` (default) for snappy
+> responses, or raise it for deeper analysis on a plan with a higher timeout.
+
+## API reference
+
+| Method & path | Body | Returns |
+| --- | --- | --- |
+| `GET /api/health` | — | `{status, version, features}` |
+| `POST /api/analyze` | `{transcript, meeting_title?, attendees?, meeting_date?}` | `{analysis, model, usage}` |
+| `POST /api/transcribe` | multipart `file` | `{transcript}` |
+| `POST /api/export/jira` | `{meeting_title?, action_items[]}` | `{target, created[]}` |
+| `POST /api/export/notion` | `{meeting_title?, action_items[]}` | `{target, created[]}` |
+
+Errors use a consistent envelope: `{"error": {"code": "...", "message": "..."}}`.
+Interactive docs are available at `/docs` when running the backend.
+
+## Notes on the integrations
+
+- **Jira:** uses the Cloud REST API v3 with Basic auth (`JIRA_EMAIL` +
+  `JIRA_API_TOKEN`). Creates one issue per action item in `JIRA_PROJECT_KEY`.
+- **Notion:** creates one page per action item in `NOTION_DATABASE_ID`. Optional
+  `Owner` (rich text), `Due` (date), and `Priority` (select) properties are set
+  only if they exist on the database, so it works with any database that has a
+  title property.
+- **Transcription** is intentionally provider-pluggable and optional; Anthropic's
+  API does not transcribe audio, so Whisper is used behind a feature flag while
+  the analysis pipeline stays Claude-first.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node / frontend
+node_modules/
+web/dist/
+web/node_modules/
+# tsc composite build artifacts
+*.tsbuildinfo
+web/vite.config.js
+web/vite.config.d.ts
+
+# Local agent tooling (not part of the project)
+.claude-flow/
+.claude/
+.swarm/
+.hive-mind/
+memory/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
