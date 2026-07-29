@@ -12,7 +12,8 @@ email** — powered by Claude, with optional one-click export of action items to
 **Author:** Azamuddin Mohammed · **Live demo:** https://meeting-action.vercel.app
 
 📄 Further reading: [DESIGN.md](DESIGN.md) (decisions & trade-offs) ·
-[AI_USAGE.md](AI_USAGE.md) (how AI assistance was used)
+[AI_USAGE.md](AI_USAGE.md) (how AI assistance was used) ·
+[DECLARATION.md](DECLARATION.md) (declaration of work)
 
 ## Demo
 
