@@ -14,6 +14,29 @@ email** — powered by Claude, with optional one-click export of action items to
 📄 Further reading: [DESIGN.md](DESIGN.md) (decisions & trade-offs) ·
 [AI_USAGE.md](AI_USAGE.md) (how AI assistance was used)
 
+## Demo
+
+A short (~1 minute) walkthrough video is included with this submission at
+[`docs/demo.mp4`](docs/demo.mp4). Or try it live:
+**https://meeting-action.vercel.app** → click **Load sample** → **Analyze meeting**.
+
+## Reviewing this in 5 minutes
+
+1. **See it work** — watch [`docs/demo.mp4`](docs/demo.mp4), or open the live demo
+   and run the sample.
+2. **The reasoning** — [DESIGN.md](DESIGN.md) covers the key decisions, trade-offs,
+   and what I'd do next in production.
+3. **The core code** — `server/schemas.py` (the API contract),
+   `server/services/analysis.py` + `claude.py` / `openrouter.py` (the provider
+   abstraction and structured-output validation), and `web/src/App.tsx` (the UI flow).
+4. **Verify it yourself** — no API key needed; the model is mocked in tests:
+   ```bash
+   pip install -r requirements-dev.txt && ruff check server tests api && pytest -q
+   npm --prefix web install && npm --prefix web run build
+   ```
+5. **Try the API** — `GET /api/health` lists configured features; `POST /api/analyze`
+   does the work (curl example under [API reference](#api-reference)).
+
 ---
 
 ## How it works
