@@ -11,6 +11,9 @@ email** — powered by Claude, with optional one-click export of action items to
 
 **Author:** Azamuddin Mohammed · **Live demo:** https://meeting-action.vercel.app
 
+📄 Further reading: [DESIGN.md](DESIGN.md) (decisions & trade-offs) ·
+[AI_USAGE.md](AI_USAGE.md) (how AI assistance was used)
+
 ---
 
 ## How it works
@@ -135,7 +138,45 @@ CI (`.github/workflows/ci.yml`) runs all of the above on every push and PR.
 | `POST /api/export/notion` | `{meeting_title?, action_items[]}` | `{target, created[]}` |
 
 Errors use a consistent envelope: `{"error": {"code": "...", "message": "..."}}`.
-Interactive docs are available at `/docs` when running the backend.
+Interactive docs (OpenAPI/Swagger) are available at `/docs` when running the backend.
+
+### Try it with curl
+
+```bash
+curl -s -X POST https://meeting-action.vercel.app/api/analyze \
+  -H "Content-Type: application/json" \
+  --data-binary @- <<'JSON'
+{
+  "transcript": "Alex: Ship the redesign Friday. Priya, wire analytics by Wednesday. Jordan, load-test signup before Thursday, high priority.",
+  "meeting_title": "Q3 sync",
+  "meeting_date": "2026-07-30",
+  "attendees": ["Alex", "Priya", "Jordan"]
+}
+JSON
+```
+
+Abbreviated response:
+
+```json
+{
+  "analysis": {
+    "summary": "The team committed to shipping the redesign on Friday...",
+    "decisions": [{ "decision": "Ship the redesign Friday", "rationale": null }],
+    "action_items": [
+      { "id": "ai-1", "task": "Load-test the signup service", "owner": "Jordan",
+        "due_date": "2026-07-30", "priority": "high", "status": "open" }
+    ],
+    "risks": ["Signup service not yet load-tested"],
+    "follow_up_email": { "subject": "Q3 sync — next steps", "body": "Hi team, ..." }
+  },
+  "model": "anthropic/claude-sonnet-4.5 (via OpenRouter)",
+  "usage": { "input_tokens": 1035, "output_tokens": 589 }
+}
+```
+
+A sample transcript for manual testing lives in
+[`examples/sample-transcript.txt`](examples/sample-transcript.txt) (also loadable
+in the UI via the **Load sample** button).
 
 ## Notes on the integrations
 

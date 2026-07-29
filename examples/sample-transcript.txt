@@ -1,0 +1,8 @@
+Alex: Thanks everyone for joining the Q3 planning sync. First item — the mobile onboarding redesign.
+Priya: The new flow tested well. I think we ship it. The blocker is the analytics events aren't wired up yet.
+Alex: Okay, decision: we ship the redesign next Friday. Priya, can you own wiring the analytics events by Wednesday?
+Priya: Yes, I'll have them in by Wednesday.
+Jordan: One risk — we haven't load-tested the new sign-up service.
+Alex: Good call. Jordan, please run a load test before Thursday. High priority.
+Jordan: Will do.
+Alex: Last thing — legal review of the new terms. Let's punt that to next sprint.
