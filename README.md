@@ -9,6 +9,8 @@ email** — powered by Claude, with optional one-click export of action items to
 - **Frontend:** React + TypeScript (Vite).
 - **Deploy target:** Vercel (React static build + Python serverless function).
 
+**Author:** Azamuddin Mohammed · **Live demo:** https://meeting-action.vercel.app
+
 ---
 
 ## How it works
@@ -146,6 +148,12 @@ Interactive docs are available at `/docs` when running the backend.
 - **Transcription** is intentionally provider-pluggable and optional; Anthropic's
   API does not transcribe audio, so Whisper is used behind a feature flag while
   the analysis pipeline stays Claude-first.
+
+## AI usage
+
+This project was built with the help of an AI coding assistant. See
+[AI_USAGE.md](AI_USAGE.md) for a transparent account of what the assistant did
+and which decisions and review I own.
 
 ## License
 

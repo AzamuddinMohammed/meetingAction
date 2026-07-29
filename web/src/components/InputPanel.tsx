@@ -1,4 +1,17 @@
+import type { SyntheticEvent } from "react";
 import { useRef, useState } from "react";
+
+// Native date inputs only open the calendar from the small icon. Calling
+// showPicker() on click/focus opens it from anywhere on the field. It must run
+// in a user gesture and isn't in every browser, so failures are ignored.
+function openDatePicker(e: SyntheticEvent<HTMLInputElement>) {
+  const el = e.currentTarget as HTMLInputElement & { showPicker?: () => void };
+  try {
+    el.showPicker?.();
+  } catch {
+    /* not supported / not a valid gesture — fall back to manual entry */
+  }
+}
 
 interface Props {
   transcript: string;
@@ -46,9 +59,12 @@ export function InputPanel(props: Props) {
         <label className="field">
           <span>Date</span>
           <input
+            className="date-input"
             type="date"
             value={props.meetingDate}
             onChange={(e) => props.setMeetingDate(e.target.value)}
+            onClick={openDatePicker}
+            onFocus={openDatePicker}
           />
         </label>
         <label className="field field-wide">

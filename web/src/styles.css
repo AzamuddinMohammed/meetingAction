@@ -168,6 +168,20 @@ textarea {
   line-height: 1.5;
 }
 
+/* Date field: dark-themed native picker + whole-field is clickable */
+.date-input {
+  color-scheme: dark;
+  cursor: pointer;
+}
+.date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  filter: invert(0.8);
+}
+.date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 .input-actions {
   display: flex;
   align-items: center;
