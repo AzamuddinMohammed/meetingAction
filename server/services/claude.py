@@ -14,14 +14,8 @@ import anthropic
 from ..config import Settings
 from ..errors import ContentRefusedError, FeatureUnavailableError, UpstreamError
 from ..prompts import SYSTEM_PROMPT, build_user_prompt
-from ..schemas import (
-    ActionItem,
-    AnalyzeRequest,
-    Decision,
-    Email,
-    LlmAnalysis,
-    MeetingAnalysis,
-)
+from ..schemas import AnalyzeRequest, LlmAnalysis, MeetingAnalysis
+from ._common import to_public_analysis
 
 logger = logging.getLogger(__name__)
 
@@ -70,35 +64,9 @@ class ClaudeService:
             logger.error("Claude returned no parseable structured output")
             raise UpstreamError("The analysis provider returned an unusable response.")
 
-        analysis = _to_public_analysis(parsed)
+        analysis = to_public_analysis(parsed)
         usage = _extract_usage(response)
         return analysis, usage
-
-
-def _to_public_analysis(llm: LlmAnalysis) -> MeetingAnalysis:
-    """Map the raw LLM output onto public models, assigning stable action-item IDs."""
-    action_items = [
-        ActionItem(
-            id=f"ai-{index}",
-            task=item.task,
-            owner=item.owner,
-            due_date=item.due_date,
-            priority=item.priority,
-        )
-        for index, item in enumerate(llm.action_items, start=1)
-    ]
-    decisions = [Decision(decision=d.decision, rationale=d.rationale) for d in llm.decisions]
-    return MeetingAnalysis(
-        summary=llm.summary,
-        key_points=llm.key_points,
-        decisions=decisions,
-        action_items=action_items,
-        risks=llm.risks,
-        follow_up_email=Email(
-            subject=llm.follow_up_email.subject,
-            body=llm.follow_up_email.body,
-        ),
-    )
 
 
 def _extract_usage(response: object) -> dict[str, int]:

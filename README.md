@@ -31,13 +31,24 @@ free-form text that has to be scraped.
 
 | Feature | Requires | Behavior when unconfigured |
 | --- | --- | --- |
-| Transcript → structured analysis | `ANTHROPIC_API_KEY` | `/api/analyze` returns `503 feature_unavailable` |
+| Transcript → structured analysis | `ANTHROPIC_API_KEY` **or** `OPENROUTER_API_KEY` | `/api/analyze` returns `503 feature_unavailable` |
 | Audio upload → transcript | `OPENAI_API_KEY` (Whisper) | Upload button hidden; endpoint returns `503` |
 | Export action items → Jira | `JIRA_*` env vars | Jira button hidden; endpoint returns `503` |
 | Export action items → Notion | `NOTION_API_KEY` + `NOTION_DATABASE_ID` | Notion button hidden; endpoint returns `503` |
 
 The frontend reads `GET /api/health` on load and enables UI only for configured
-features — so the app is fully usable with just an Anthropic key.
+features — so the app is fully usable with just an analysis key.
+
+### Analysis providers
+
+Analysis works with either provider; the backend picks one automatically
+(Anthropic preferred when both are set):
+
+- **Anthropic** (`ANTHROPIC_API_KEY`) — the direct API, using structured-output
+  parsing (`messages.parse`).
+- **OpenRouter** (`OPENROUTER_API_KEY`) — an OpenAI-compatible gateway that routes
+  to Claude models (`OPENROUTER_MODEL`, default `anthropic/claude-sonnet-4.5`).
+  The reply is validated against the same schema, with one corrective retry.
 
 ## Project structure
 

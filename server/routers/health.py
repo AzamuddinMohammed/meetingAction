@@ -22,7 +22,7 @@ def health(settings: SettingsDep) -> HealthResponse:
         status="ok",
         version=__version__,
         features={
-            "analysis": settings.claude_configured,
+            "analysis": settings.analysis_configured,
             "transcription": settings.transcription_configured,
             "jira_export": settings.jira_configured,
             "notion_export": settings.notion_configured,

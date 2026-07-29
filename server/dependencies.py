@@ -12,7 +12,8 @@ from typing import Annotated
 from fastapi import Depends
 
 from .config import Settings, get_settings
-from .services.claude import ClaudeService
+from .services._common import AnalysisProvider
+from .services.analysis import get_analysis_service as _select_analysis_service
 from .services.jira import JiraService
 from .services.notion import NotionService
 from .services.transcription import TranscriptionService
@@ -20,8 +21,8 @@ from .services.transcription import TranscriptionService
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-def get_claude_service(settings: SettingsDep) -> ClaudeService:
-    return ClaudeService(settings)
+def get_analysis_service(settings: SettingsDep) -> AnalysisProvider:
+    return _select_analysis_service(settings)
 
 
 def get_transcription_service(settings: SettingsDep) -> TranscriptionService:
@@ -36,7 +37,7 @@ def get_notion_service(settings: SettingsDep) -> NotionService:
     return NotionService(settings)
 
 
-ClaudeServiceDep = Annotated[ClaudeService, Depends(get_claude_service)]
+AnalysisServiceDep = Annotated[AnalysisProvider, Depends(get_analysis_service)]
 TranscriptionServiceDep = Annotated[TranscriptionService, Depends(get_transcription_service)]
 JiraServiceDep = Annotated[JiraService, Depends(get_jira_service)]
 NotionServiceDep = Annotated[NotionService, Depends(get_notion_service)]

@@ -1,4 +1,4 @@
-from server.dependencies import get_claude_service
+from server.dependencies import get_analysis_service
 from server.errors import ContentRefusedError, FeatureUnavailableError
 from server.schemas import (
     ActionItem,
@@ -34,7 +34,7 @@ def _sample_analysis() -> MeetingAnalysis:
 
 
 def test_analyze_returns_structured_result(client, app):
-    app.dependency_overrides[get_claude_service] = lambda: FakeClaudeService(_sample_analysis())
+    app.dependency_overrides[get_analysis_service] = lambda: FakeClaudeService(_sample_analysis())
 
     resp = client.post("/api/analyze", json={"transcript": "some meeting text"})
     assert resp.status_code == 200
@@ -55,7 +55,7 @@ def test_analyze_rejects_oversized_transcript(client, app, monkeypatch):
 
     monkeypatch.setenv("MAX_TRANSCRIPT_CHARS", "10")
     get_settings.cache_clear()  # env changed after app build; re-read it
-    app.dependency_overrides[get_claude_service] = lambda: FakeClaudeService(_sample_analysis())
+    app.dependency_overrides[get_analysis_service] = lambda: FakeClaudeService(_sample_analysis())
 
     resp = client.post("/api/analyze", json={"transcript": "x" * 50})
     assert resp.status_code == 413
@@ -64,7 +64,7 @@ def test_analyze_rejects_oversized_transcript(client, app, monkeypatch):
 
 
 def test_analyze_feature_unavailable(client, app):
-    app.dependency_overrides[get_claude_service] = lambda: FakeClaudeService(
+    app.dependency_overrides[get_analysis_service] = lambda: FakeClaudeService(
         exc=FeatureUnavailableError("no key")
     )
     resp = client.post("/api/analyze", json={"transcript": "hi"})
@@ -74,7 +74,7 @@ def test_analyze_feature_unavailable(client, app):
 
 
 def test_analyze_content_refused(client, app):
-    app.dependency_overrides[get_claude_service] = lambda: FakeClaudeService(
+    app.dependency_overrides[get_analysis_service] = lambda: FakeClaudeService(
         exc=ContentRefusedError("declined")
     )
     resp = client.post("/api/analyze", json={"transcript": "hi"})

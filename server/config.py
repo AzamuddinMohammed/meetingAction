@@ -23,11 +23,26 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # --- Core / Claude ---
+    # --- Core / Claude (direct Anthropic API) ---
     anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
     claude_model: str = Field(default="claude-opus-4-8", alias="CLAUDE_MODEL")
     analysis_effort: Effort = Field(default="medium", alias="ANALYSIS_EFFORT")
     analysis_max_tokens: int = Field(default=8000, alias="ANALYSIS_MAX_TOKENS")
+
+    # --- Alternative provider: OpenRouter (OpenAI-compatible gateway to Claude) ---
+    # Used automatically when ANTHROPIC_API_KEY is absent but OPENROUTER_API_KEY is set.
+    openrouter_api_key: str | None = Field(default=None, alias="OPENROUTER_API_KEY")
+    openrouter_model: str = Field(
+        default="anthropic/claude-sonnet-4.5", alias="OPENROUTER_MODEL"
+    )
+    openrouter_base_url: str = Field(
+        default="https://openrouter.ai/api/v1", alias="OPENROUTER_BASE_URL"
+    )
+    # Optional attribution headers OpenRouter uses for its dashboard/rankings.
+    openrouter_site_url: str | None = Field(default=None, alias="OPENROUTER_SITE_URL")
+    openrouter_app_title: str = Field(
+        default="MeetingAction", alias="OPENROUTER_APP_TITLE"
+    )
 
     # --- HTTP / CORS ---
     # Comma-separated list of allowed origins. "*" allows all (dev default).
@@ -55,6 +70,24 @@ class Settings(BaseSettings):
     @property
     def claude_configured(self) -> bool:
         return bool(self.anthropic_api_key)
+
+    @property
+    def openrouter_configured(self) -> bool:
+        return bool(self.openrouter_api_key)
+
+    @property
+    def analysis_configured(self) -> bool:
+        """True if any analysis provider (Anthropic or OpenRouter) is available."""
+        return self.claude_configured or self.openrouter_configured
+
+    @property
+    def analysis_provider(self) -> str:
+        """Which provider will be used. Anthropic is preferred when both are set."""
+        if self.claude_configured:
+            return "anthropic"
+        if self.openrouter_configured:
+            return "openrouter"
+        return "none"
 
     @property
     def transcription_configured(self) -> bool:
