@@ -36,3 +36,6 @@ memory/
 Thumbs.db
 .idea/
 .vscode/
+
+# Submission artifacts
+*.zip
